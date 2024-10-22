@@ -42,37 +42,14 @@ namespace Plukliste
                     Console.WriteLine($"\nFil: {filer[nuværendeFilIndex]}");
 
                     var filExtension = Path.GetExtension(filer[nuværendeFilIndex]).ToLower();
-                    if (filExtension == ".xml")
+                    IPlukListeHandler handler = filExtension switch
                     {
-                        using (FileStream fileStream = File.OpenRead(filer[nuværendeFilIndex]))
-                        {
-                            XmlSerializer xmlSerializer = new XmlSerializer(typeof(PlukListe));
+                        ".xml" => new XMLPlukListeHandler(),
+                        ".csv" => new CSVPlukListeHandler(),
+                        _ => throw new NotSupportedException($"File type {filExtension} is not supported")
+                    };
 
-                            var plukliste = (PlukListe?)xmlSerializer.Deserialize(fileStream);
-
-                            if (plukliste != null && plukliste.Lines != null)
-                            {
-                                Console.WriteLine("\n{0, -13}{1}", "Navn:", plukliste.Name);
-                                foreach (var vare in plukliste.Lines)
-                                {
-                                    Console.WriteLine("{0, -13}{1}", "Vare:", vare.Title);
-                                    if (vare?.ProductID?.StartsWith("PRINT-") == true)
-                                    {
-                                        var htmlIndhold = GenererHTMLIndhold(vare.ProductID, plukliste);
-                                        var printFil = $"print\\{vare.ProductID}.html";
-                                        File.WriteAllText(printFil, htmlIndhold);
-                                        printBesked = $"Vejledning {printFil} klar til udskrivning.";
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    else if (filExtension == ".html")
-                    {
-                        var vejledningIndhold = File.ReadAllText(filer[nuværendeFilIndex]);
-                        var opdateretIndhold = UdskiftTags(vejledningIndhold);
-                        Console.WriteLine(opdateretIndhold);
-                    }
+                    handler.HandleFile(filer[nuværendeFilIndex]);
 
                     VisNavigationsmuligheder();
 
@@ -161,21 +138,46 @@ namespace Plukliste
 
             return indhold;
         }
+    }
 
-        static string GenererHTMLIndhold(string productID, PlukListe plukliste)
+    public class CSVPlukListeHandler : IPlukListeHandler
+    {
+        public void HandleFile(string filePath)
         {
-            string templatePath = $"templates\\{productID}.html";
-            if (!File.Exists(templatePath))
+            var lines = File.ReadAllLines(filePath);
+            var plukListe = new PlukListe
             {
-                Console.WriteLine($"Template {templatePath} findes ikke.");
-                return string.Empty;
+                Name = Path.GetFileNameWithoutExtension(filePath),
+                Forsendelse = "pickup",
+                Lines = new List<Item>()
+            };
+
+            foreach (var line in lines)
+            {
+                var columns = line.Split(',');
+                plukListe.Lines.Add(new Item { Title = columns[0], ProductID = columns[1] });
             }
 
-            string htmlTemplate = File.ReadAllText(templatePath);
-            htmlTemplate = htmlTemplate.Replace("[KUNDENAVN]", plukliste.Name ?? "");
-            htmlTemplate = htmlTemplate.Replace("[DATO]", DateTime.Now.ToString("dd-MM-yyyy"));
-
-            return htmlTemplate;
+            // Process the plukListe as needed
+            Console.WriteLine($"Processed CSV file for {plukListe.Name}");
         }
+    }
+
+    public class XMLPlukListeHandler : IPlukListeHandler
+    {
+        public void HandleFile(string filePath)
+        {
+            var serializer = new XmlSerializer(typeof(PlukListe));
+            using var reader = new StreamReader(filePath);
+            var plukListe = serializer.Deserialize(reader) as PlukListe ?? throw new InvalidOperationException("Deserialization failed, resulting in a null PlukListe.");
+
+            // Process the plukListe as needed
+            Console.WriteLine($"Processed XML file for {plukListe.Name}");
+        }
+    }
+
+    public interface IPlukListeHandler
+    {
+        void HandleFile(string filePath);
     }
 }

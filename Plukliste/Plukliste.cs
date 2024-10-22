@@ -9,28 +9,19 @@ namespace Plukliste
     {
         [XmlElement("Name")]
         public string? Name { get; set; }
-
         [XmlElement("Forsendelse")]
         public string? Forsendelse { get; set; }
-
         [XmlElement("Adresse")]
         public string? Adresse { get; set; }
-
         [XmlArray("Lines")]
         [XmlArrayItem("Item")]
         public List<Item> Lines { get; set; } = new List<Item>();
-
-        public void AddItem(Item item)
-        {
-            Lines.Add(item);
-        }
     }
 
     public class Item
     {
         [XmlElement("Title")]
         public string? Title { get; set; }
-
         [XmlElement("ProductID")]
         public string? ProductID { get; set; }
     }
