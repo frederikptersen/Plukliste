@@ -1,46 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Xml.Serialization;
-
-namespace Plukliste
+﻿namespace Plukliste;
+public class Pluklist
 {
-    [XmlRoot("Pluklist")]
-    public class PlukListe
-    {
-        [XmlElement("Name")]
-        public string? Name { get; set; }
+    public string? Name;
+    public string? Forsendelse;
+    public string? Adresse;
+    public List<Item> Lines = new List<Item>();
+    public void AddItem(Item item) { Lines.Add(item); }
+}
 
-        [XmlElement("Forsendelse")]
-        public string? Forsendelse { get; set; }
+public class Item
+{
+    public string ProductID;
+    public string Title;
+    public ItemType Type;
+    public int Amount;
+}
 
-        [XmlElement("Adresse")]
-        public string? Adresse { get; set; }
-
-        [XmlArray("Lines")]
-        [XmlArrayItem("Item")]
-        public List<Item> Lines { get; set; } = new List<Item>();
-
-        public void AddItem(Item item)
-        {
-            Lines.Add(item);
-        }
-    }
-
-    public class Item
-    {
-        [XmlElement("Title")]
-        public string? Title { get; set; }
-
-        [XmlElement("ProductID")]
-        public string? ProductID { get; set; }
-    }
-
-    public enum ItemType
-    {
-        [XmlEnum("Fysisk")]
-        Fysisk,
-
-        [XmlEnum("Print")]
-        Print
-    }
+public enum ItemType
+{
+    Fysisk, Print
 }
