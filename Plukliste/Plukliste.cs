@@ -22,26 +22,17 @@ namespace Plukliste
 
         public void AddItem(Item item)
         {
-            if (item != null)
-            {
-                Lines.Add(item);
-            }
+            Lines.Add(item);
         }
     }
 
     public class Item
     {
-        [XmlElement("ProductID")]
-        public string ProductID { get; set; } = string.Empty;
-
         [XmlElement("Title")]
-        public string Title { get; set; } = string.Empty;
+        public string? Title { get; set; }
 
-        [XmlElement("Type")]
-        public ItemType Type { get; set; }
-
-        [XmlElement("Amount")]
-        public int Amount { get; set; }
+        [XmlElement("ProductID")]
+        public string? ProductID { get; set; }
     }
 
     public enum ItemType
